@@ -18,12 +18,24 @@ namespace BigSchool1.Controllers
             _dbContext = new ApplicationDbContext();
         }
         // GET: Courses
+        
+        [Authorize]
+        public ActionResult Create()
+        {
+            var viewModel = new CourseViewModel
+            {
+                Categories = _dbContext.Categories.ToList()
+            };
+         return View(viewModel);
+        }
+
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Create(CourseViewModel viewModel)
         {
-            if(!ModelState.IsValid)
-                {
+            if (!ModelState.IsValid)
+            {
                 viewModel.Categories = _dbContext.Categories.ToList();
                 return View("Create", viewModel);
             }
@@ -37,14 +49,6 @@ namespace BigSchool1.Controllers
             _dbContext.Courses.Add(course);
             _dbContext.SaveChanges();
             return RedirectToAction("Index", "Home");
-        }
-        public ActionResult Create()
-        {
-            var viewModel = new CourseViewModel
-            {
-                Categories = _dbContext.Categories.ToList()
-            };
-         return View(viewModel);
         }
     }
 
