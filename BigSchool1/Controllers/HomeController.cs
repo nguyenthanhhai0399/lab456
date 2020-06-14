@@ -6,21 +6,22 @@ using System.Web;
 using System.Web.Mvc;
 using System.Data.Entity;
 
-namespace BigSchool1.Controllers
+namespace BigShool.Controllers
 {
     public class HomeController : Controller
     {
-        private ApplicationDBContext _dbContext;
+        private ApplicationDbContext _dbContext;
         public HomeController()
         {
-            _dbContext = new ApplicationDBContext();
+            _dbContext = new ApplicationDbContext();
         }
         public ActionResult Index()
         {
-            var upcommingCourses = _dbContext.Courses.Include(c => c.Lecturer).Include(c => c.Category).Where(c => c.DateTime > DateTime.Now);
-
-
-            return View(upcommingCourses);
+            var upcomingCourses = _dbContext.Courses
+                .Include(c => c.Lecturer)
+                .Include(c => c.Category)
+                .Where(c => c.Datetime > DateTime.Now);
+            return View(upcomingCourses);
         }
 
         public ActionResult About()
@@ -36,6 +37,5 @@ namespace BigSchool1.Controllers
 
             return View();
         }
-          
     }
 }

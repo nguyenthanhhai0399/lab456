@@ -11,6 +11,7 @@ namespace BigSchool1.Models
     {
         public DbSet<Course> Courses { get; set; }
         public DbSet<Category> Categories { get; set; }
+        
         public ApplicationDbContext()
             : base("DefaultConnection", throwIfV1Schema: false)
         {
@@ -20,5 +21,14 @@ namespace BigSchool1.Models
         {
             return new ApplicationDbContext();
         }
+
+        //protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Entity<Attendance>()
+        //        .HasRequired(   a => a.Course)
+        //        .WithMany()
+        //        .WillCascadeOnDelete(false);
+        //    base.OnModelCreating(modelBuilder);
+        //}
     }
 }
