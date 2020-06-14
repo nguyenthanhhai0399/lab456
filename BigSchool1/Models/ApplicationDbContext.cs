@@ -30,5 +30,6 @@ namespace BigSchool1.Models
         //        .WillCascadeOnDelete(false);
         //    base.OnModelCreating(modelBuilder);
         //}
+
     }
 }
