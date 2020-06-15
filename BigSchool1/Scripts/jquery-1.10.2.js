@@ -9490,314 +9490,11 @@ jQuery.speed = function( speed, easing, fn ) {
 };
 
 jQuery.easing = {
-	linear: function( p ) {
-		return p;
-	},
-	swing: function( p ) {
-		return 0.5 - Math.cos( p*Math.PI ) / 2;
-	}
-};
-
-jQuery.timers = [];
-jQuery.fx = Tween.prototype.init;
-jQuery.fx.tick = function() {
-	var timer,
-		timers = jQuery.timers,
-		i = 0;
-
-	fxNow = jQuery.now();
-
-	for ( ; i < timers.length; i++ ) {
-		timer = timers[ i ];
-		// Checks the timer has not already been removed
-		if ( !timer() && timers[ i ] === timer ) {
-			timers.splice( i--, 1 );
-		}
-	}
-
-	if ( !timers.length ) {
-		jQuery.fx.stop();
-	}
-	fxNow = undefined;
-};
-
-jQuery.fx.timer = function( timer ) {
-	if ( timer() && jQuery.timers.push( timer ) ) {
-		jQuery.fx.start();
-	}
-};
-
-jQuery.fx.interval = 13;
-
-jQuery.fx.start = function() {
-	if ( !timerId ) {
-		timerId = setInterval( jQuery.fx.tick, jQuery.fx.interval );
-	}
-};
-
-jQuery.fx.stop = function() {
-	clearInterval( timerId );
-	timerId = null;
-};
-
-jQuery.fx.speeds = {
-	slow: 600,
-	fast: 200,
-	// Default speed
-	_default: 400
-};
-
-// Back Compat <1.8 extension point
-jQuery.fx.step = {};
-
-if ( jQuery.expr && jQuery.expr.filters ) {
-	jQuery.expr.filters.animated = function( elem ) {
-		return jQuery.grep(jQuery.timers, function( fn ) {
-			return elem === fn.elem;
-		}).length;
-	};
-}
-jQuery.fn.offset = function( options ) {
-	if ( arguments.length ) {
-		return options === undefined ?
-			this :
-			this.each(function( i ) {
-				jQuery.offset.setOffset( this, options, i );
-			});
-	}
-
-	var docElem, win,
-		box = { top: 0, left: 0 },
-		elem = this[ 0 ],
-		doc = elem && elem.ownerDocument;
-
-	if ( !doc ) {
-		return;
-	}
-
-	docElem = doc.documentElement;
-
-	// Make sure it's not a disconnected DOM node
-	if ( !jQuery.contains( docElem, elem ) ) {
-		return box;
-	}
-
-	// If we don't have gBCR, just use 0,0 rather than error
-	// BlackBerry 5, iOS 3 (original iPhone)
-	if ( typeof elem.getBoundingClientRect !== core_strundefined ) {
-		box = elem.getBoundingClientRect();
-	}
-	win = getWindow( doc );
-	return {
-		top: box.top  + ( win.pageYOffset || docElem.scrollTop )  - ( docElem.clientTop  || 0 ),
-		left: box.left + ( win.pageXOffset || docElem.scrollLeft ) - ( docElem.clientLeft || 0 )
-	};
-};
-
-jQuery.offset = {
-
-	setOffset: function( elem, options, i ) {
-		var position = jQuery.css( elem, "position" );
-
-		// set position first, in-case top/left are set even on static elem
-		if ( position === "static" ) {
-			elem.style.position = "relative";
-		}
-
-		var curElem = jQuery( elem ),
-			curOffset = curElem.offset(),
-			curCSSTop = jQuery.css( elem, "top" ),
-			curCSSLeft = jQuery.css( elem, "left" ),
-			calculatePosition = ( position === "absolute" || position === "fixed" ) && jQuery.inArray("auto", [curCSSTop, curCSSLeft]) > -1,
-			props = {}, curPosition = {}, curTop, curLeft;
-
-		// need to be able to calculate position if either top or left is auto and position is either absolute or fixed
-		if ( calculatePosition ) {
-			curPosition = curElem.position();
-			curTop = curPosition.top;
-			curLeft = curPosition.left;
-		} else {
-			curTop = parseFloat( curCSSTop ) || 0;
-			curLeft = parseFloat( curCSSLeft ) || 0;
-		}
-
-		if ( jQuery.isFunction( options ) ) {
-			options = options.call( elem, i, curOffset );
-		}
-
-		if ( options.top != null ) {
-			props.top = ( options.top - curOffset.top ) + curTop;
-		}
-		if ( options.left != null ) {
-			props.left = ( options.left - curOffset.left ) + curLeft;
-		}
-
-		if ( "using" in options ) {
-			options.using.call( elem, props );
-		} else {
-			curElem.css( props );
-		}
-	}
-};
-
-
-jQuery.fn.extend({
-
-	position: function() {
-		if ( !this[ 0 ] ) {
-			return;
-		}
-
-		var offsetParent, offset,
-			parentOffset = { top: 0, left: 0 },
-			elem = this[ 0 ];
-
-		// fixed elements are offset from window (parentOffset = {top:0, left: 0}, because it is it's only offset parent
-		if ( jQuery.css( elem, "position" ) === "fixed" ) {
-			// we assume that getBoundingClientRect is available when computed position is fixed
-			offset = elem.getBoundingClientRect();
-		} else {
-			// Get *real* offsetParent
-			offsetParent = this.offsetParent();
-
-			// Get correct offsets
-			offset = this.offset();
-			if ( !jQuery.nodeName( offsetParent[ 0 ], "html" ) ) {
-				parentOffset = offsetParent.offset();
-			}
-
-			// Add offsetParent borders
-			parentOffset.top  += jQuery.css( offsetParent[ 0 ], "borderTopWidth", true );
-			parentOffset.left += jQuery.css( offsetParent[ 0 ], "borderLeftWidth", true );
-		}
-
-		// Subtract parent offsets and element margins
-		// note: when an element has margin: auto the offsetLeft and marginLeft
-		// are the same in Safari causing offset.left to incorrectly be 0
-		return {
-			top:  offset.top  - parentOffset.top - jQuery.css( elem, "marginTop", true ),
-			left: offset.left - parentOffset.left - jQuery.css( elem, "marginLeft", true)
-		};
-	},
-
-	offsetParent: function() {
-		return this.map(function() {
-			var offsetParent = this.offsetParent || docElem;
-			while ( offsetParent && ( !jQuery.nodeName( offsetParent, "html" ) && jQuery.css( offsetParent, "position") === "static" ) ) {
-				offsetParent = offsetParent.offsetParent;
-			}
-			return offsetParent || docElem;
-		});
-	}
-});
-
-
-// Create scrollLeft and scrollTop methods
-jQuery.each( {scrollLeft: "pageXOffset", scrollTop: "pageYOffset"}, function( method, prop ) {
-	var top = /Y/.test( prop );
-
-	jQuery.fn[ method ] = function( val ) {
-		return jQuery.access( this, function( elem, method, val ) {
-			var win = getWindow( elem );
-
-			if ( val === undefined ) {
-				return win ? (prop in win) ? win[ prop ] :
-					win.document.documentElement[ method ] :
-					elem[ method ];
-			}
-
-			if ( win ) {
-				win.scrollTo(
-					!top ? val : jQuery( win ).scrollLeft(),
-					top ? val : jQuery( win ).scrollTop()
-				);
-
-			} else {
-				elem[ method ] = val;
-			}
-		}, method, val, arguments.length, null );
-	};
-});
-
-function getWindow( elem ) {
-	return jQuery.isWindow( elem ) ?
-		elem :
-		elem.nodeType === 9 ?
-			elem.defaultView || elem.parentWindow :
-			false;
-}
-// Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
-jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
-	jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name }, function( defaultExtra, funcName ) {
-		// margin is only for outerHeight, outerWidth
-		jQuery.fn[ funcName ] = function( margin, value ) {
-			var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
-				extra = defaultExtra || ( margin === true || value === true ? "margin" : "border" );
-
-			return jQuery.access( this, function( elem, type, value ) {
-				var doc;
-
-				if ( jQuery.isWindow( elem ) ) {
-					// As of 5/8/2012 this will yield incorrect results for Mobile Safari, but there
-					// isn't a whole lot we can do. See pull request at this URL for discussion:
-					// https://github.com/jquery/jquery/pull/764
-					return elem.document.documentElement[ "client" + name ];
-				}
-
-				// Get document width or height
-				if ( elem.nodeType === 9 ) {
-					doc = elem.documentElement;
-
-					// Either scroll[Width/Height] or offset[Width/Height] or client[Width/Height], whichever is greatest
-					// unfortunately, this causes bug #3838 in IE6/8 only, but there is currently no good, small way to fix it.
-					return Math.max(
-						elem.body[ "scroll" + name ], doc[ "scroll" + name ],
-						elem.body[ "offset" + name ], doc[ "offset" + name ],
-						doc[ "client" + name ]
-					);
-				}
-
-				return value === undefined ?
-					// Get width or height on the element, requesting but not forcing parseFloat
-					jQuery.css( elem, type, extra ) :
-
-					// Set width or height on the element
-					jQuery.style( elem, type, value, extra );
-			}, type, chainable ? margin : undefined, chainable, null );
-		};
-	});
-});
-// Limit scope pollution from any deprecated API
-// (function() {
-
-// The number of elements contained in the matched element set
-jQuery.fn.size = function() {
-	return this.length;
-};
-
-jQuery.fn.andSelf = jQuery.fn.addBack;
-
-// })();
-if ( typeof module === "object" && module && typeof module.exports === "object" ) {
-	// Expose jQuery as module.exports in loaders that implement the Node
-	// module pattern (including browserify). Do not create the global, since
-	// the user will be storing it themselves locally, and globals are frowned
-	// upon in the Node module world.
-	module.exports = jQuery;
-} else {
-	// Otherwise expose jQuery to the global object as usual
-	window.jQuery = window.$ = jQuery;
-
-	// Register as a named AMD module, since jQuery can be concatenated with other
-	// files that may use define, but not via a proper concatenation script that
-	// understands anonymous AMD modules. A named AMD is safest and most robust
-	// way to register. Lowercase jquery is used because AMD module names are
-	// derived from file names, and jQuery is normally delivered in a lowercase
-	// file name. Do this after creating the global so that if an AMD module wants
-	// to call noConflict to hide this version of jQuery, it will work.
-	if ( typeof define === "function" && define.amd ) {
-		define( "jquery", [], function () { return jQuery; } );
-	}
-}
-
-})( window );
+	linear: functi╪┘qYN▒|  ├    +w├                  \  " ]   2       Й■      \   ═  ]   #   АW W M      Q       	  `  G}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                W1xHА7  ─    ,wУ                 l  # ?   3       +       l        ?      	  p   t  # 7   4       *       t       7      	  x  J
+     |   |      5       ├¤      |                   
+   #    6       5       |                 7       6       |                          8       7       |                      #    9       8       |                 :       9       |                      	  А   Д  #    ;              Д  K           #    <       ;       Д  J           #    =       <       Д  I           #    >       =       Д  H           #    ?       >       Д  G           #    @       ?       Д  F           #    A       @       Д  E           	  И   М  # 
+   B              М       
+      # 
+   C       B       М       
+      	  Р   Ф  #    D              Ф             #    E       D       Ф              #    F       E       Ф  ■           #    G       F       Ф  ¤           #    H       G       Ф  №           #    I       H       Ф  √           #    J       I       Ф  ·           #    K       J       Ф  ∙           #    L       K       Ф  °           #    M       L       Ф  ў           #    N       M       Ф  Ў           #    O       N       Ф  ї           #    P       O       Ф  Ї           #    Q       P       Ф  є           #    R       Q       Ф  Є           #    S       R       Ф  ё           #    T       S       Ф  Ё           #    U       T       Ф  я           #    V       U       Ф  ю           #    W       V       Ф  э           #    X       W       Ф  ь           #    Y       X       Ф  ы           #    Z       Y       Ф  ъ           #    [       Z       Ф  щ           #    \       [       Ф  ш           #    ]       \       Ф  ч           #    ^       ]       Ф  ц           #    _       ^       Ф  х           #    `       _       Ф  ф           #    a       `       Ф  у           #    b       a       Ф  т           #    c       b       Ф  с           #    d       c       Ф  р           #    e       d       Ф  ▀           #    f       e       Ф  ▐           #    g       f       Ф  ▌           #    h       g       Ф  ▄           #    i       h       Ф  █           #    j       i       Ф  ┌           #    k       j       Ф  ┘           #    l       k       Ф  ╪           #    m       l       Ф  ╫           #    n       m       Ф  ╓           	  Ш   Ь  #    o              Ь  1           #    p       o       Ь  0           #    q       p       Ь  /           #    r       q       Ь  .           #    s       r       Ь  -           #    t       s       Ь  ,           #    u       t       Ь  +           #    v       u       Ь  *           #    w       v       Ь  )           #    x       w       Ь  (           #    y       x       Ь  '           #    z       y       Ь  &           #    {       z       Ь  %           #    |       {       Ь  $           #    }       |       Ь  #           #    ~       }       Ь  "           #           ~       Ь  !           #    А              Ь              #    Б       А       Ь             #    В       Б       Ь             #    Г       В       Ь             #    Д       Г       Ь             #    Е       Д       Ь             #    Ж       Е       Ь             #    З       Ж       Ь             #    И       З       Ь             #    Й       И       Ь             #    К       Й       Ь                      в╡iжн^н^  ┼    ,wЩ                #    Л       К       Ь             #    М       Л       Ь             #    Н       М       Ь             #    О       Н       Ь             #    П       О       Ь             #    Р       П       Ь             #    С       Р       Ь             #    Т       С       Ь             #    У       Т       Ь             #    Ф       У       Ь             #    Х       Ф       Ь             #    Ц       Х       Ь  
+           #    Ч       Ц       Ь  	           #    Ш       Ч       Ь             #    Щ       Ш       Ь             	  а   д  # e   Ъ              д  1           # e   Ы       Ъ       д  0           # e   Ь       Ы       д  /           # e   Э       Ь       д  .           # e   Ю       Э       д  -           # e   Я       Ю       д  ,           # e   а       Я       д  +           # e   б       а       д  *           # e   в       б       д  )           # e   г       в       д  (           # e   д    

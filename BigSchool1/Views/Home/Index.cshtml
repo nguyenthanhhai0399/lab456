@@ -7,7 +7,7 @@
         @foreach (var course in Model)
         {
             <li>
-                @course.Datetime - @course.Lecturer.Name
+                @course.Datetime - @course.Lecturer.Name    
             </li>
         }
     </ul>
@@ -31,7 +31,28 @@
                 <span class="category">
                     @course.Category.Name
                 </span>
+                <button data-course-id="@course.Id" class="btn btn-default btn-sm js-toggle-attendance">Going?</button>
             </div>
         </li>
     }
 </ul>
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            $(".js-toggle-attendance").click(function(e){
+            var button = $(e.target);
+                $.post("/api/attendance", { courseId: button.attr("data-course-id") })
+                .done(function () {
+                    button
+                    .removeClass("btn-default")
+                    .addClass("btn-info")
+                    .text("Going");
+                })
+                .fail(function () {
+                    alert("Somthing fail!");
+                });
+            });
+        });
+    </script>
+    }
